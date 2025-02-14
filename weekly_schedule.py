@@ -13,15 +13,15 @@ class WeeklyScheduleGenerator:
         self.root.title("Weekly Schedule Generator")
         self.root.geometry("500x400")
         
-        # styles
+        # config styles
         style = ttk.Style()
         style.configure('TButton', padding=10)
         
-        # make the main frame
+        # making main frame
         main_frame = ttk.Frame(root, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # title label
+        # tatle label
         title_label = ttk.Label(main_frame, text="Weekly Schedule Generator", 
                               font=('Helvetica', 16, 'bold'))
         title_label.pack(pady=(0, 20))
@@ -109,19 +109,19 @@ class WeeklyScheduleGenerator:
             messagebox.showerror("Error", "Please generate availability first.")
             return
 
-        # start of schedule dictionary
+        # starting schedule dictionary
         schedule = {day: {shift: None for shift in shifts} 
                    for day, shifts in self.availability_data.items()}
 
-        # use current time as random seed
+        # using the current time as random seed
         random.seed(time.time())
 
-        # assigning workers to shifts
+        # assign workers to shifts
         for day, shifts in self.availability_data.items():
-            assigned_workers = set()  # tracking assigned workers
+            assigned_workers = set()  # track assigned workers
 
             for shift, workers in shifts.items():
-                if not workers:  # skip if no workers r available
+                if not workers:  # skip if no workers available
                     continue
 
                 random.shuffle(workers)  # randomize worker order
@@ -135,8 +135,8 @@ class WeeklyScheduleGenerator:
                         assigned = True
                         break
 
-                # iI everyone has worked, pick the first available person
-                if not assigned:
+                # if everyone has worked, pick the first available person
+                if not assigned and workers:
                     schedule[day][shift] = workers[0]
 
         self.schedule_data = schedule
@@ -152,7 +152,7 @@ class WeeklyScheduleGenerator:
         color_header = (70, 130, 180)
         color_text = (0, 0, 0)
 
-        # make image
+        # making the image
         img = Image.new("RGB", (width, height), color_bg)
         draw = ImageDraw.Draw(img)
 
@@ -164,7 +164,7 @@ class WeeklyScheduleGenerator:
             font_title = ImageFont.load_default()
             font_body = ImageFont.load_default()
 
-        # add title
+        # add in title
         draw.text((width // 2 - 200, 10), title, fill=color_header, font=font_title)
 
         # draw schedule data
@@ -185,113 +185,113 @@ class WeeklyScheduleGenerator:
 
         img.save(self.image_path)
 
-def save_word_file(self):
-    """Saves the generated schedule and worker summary to a Word document."""
-    if not self.schedule_data:
-        messagebox.showerror("Error", "Please generate the final schedule first.")
-        return
+    def save_word_file(self):
+        """Saves the generated schedule and worker summary to a Word document."""
+        if not self.schedule_data:
+            messagebox.showerror("Error", "Please generate the final schedule first.")
+            return
 
-    try:
-        doc = Document()
-        
-        # add title with formatting
-        title = doc.add_heading("Weekly Schedule", level=1)
-        title.alignment = 1  # center alignment
-        doc.add_paragraph()  # add extra spacing after title
-        
-        # track worker hours
-        worker_hours = {}
-        
-        def calculate_shift_duration(shift_time):
-            """Calculate duration of a shift in hours."""
-            start, end = shift_time.split(" - ")
+        try:
+            doc = Document()
             
-            def convert_to_24hr(time_str):
-                time = int(time_str.split()[0])
-                if "PM" in time_str and time != 12:
-                    time += 12
-                elif "AM" in time_str and time == 12:
-                    time = 0
-                return time
+            # add title with formatting
+            title = doc.add_heading("Weekly Schedule", level=1)
+            title.alignment = 1  # center alignment
+            doc.add_paragraph()  # add extra spacing after title
             
-            start_hour = convert_to_24hr(start)
-            end_hour = convert_to_24hr(end)
+            # track worker hours
+            worker_hours = {}
             
-            if end_hour < start_hour:
-                end_hour += 24
+            def calculate_shift_duration(shift_time):
+                """Calculate duration of a shift in hours."""
+                start, end = shift_time.split(" - ")
                 
-            return end_hour - start_hour
-
-        # style for day headers
-        for day, shifts in self.schedule_data.items():
-            # add extra spacing before each day
-            doc.add_paragraph()
-            
-            # add day header with blue color and proper spacing
-            day_heading = doc.add_heading(day, level=2)
-            day_heading.style.font.color.rgb = None  # reset color to default
-            for paragraph in day_heading.paragraphs:
-                paragraph.space_before = 0
-                paragraph.space_after = 0
-            
-            # make table for shifts
-            table = doc.add_table(rows=1, cols=2)
-            table.style = 'Table Grid'
-            table.allow_autofit = True
-            
-            # set headers
-            header_cells = table.rows[0].cells
-            header_cells[0].text = "Shift Time"
-            header_cells[1].text = "Worker"
-            
-            # add shifts to table
-            for shift, worker in shifts.items():
-                row_cells = table.add_row().cells
-                row_cells[0].text = shift
-                row_cells[1].text = worker if worker else 'Unassigned'
+                def convert_to_24hr(time_str):
+                    time = int(time_str.split()[0])
+                    if "PM" in time_str and time != 12:
+                        time += 12
+                    elif "AM" in time_str and time == 12:
+                        time = 0
+                    return time
                 
-                # calculate hours
-                if worker:
-                    duration = calculate_shift_duration(shift)
-                    worker_hours[worker] = worker_hours.get(worker, 0) + duration
+                start_hour = convert_to_24hr(start)
+                end_hour = convert_to_24hr(end)
+                
+                if end_hour < start_hour:
+                    end_hour += 24
+                    
+                return end_hour - start_hour
+
+            # style for day headers
+            for day, shifts in self.schedule_data.items():
+                # add extra spacing before each day
+                doc.add_paragraph()
+                
+                # add day header with proper spacing
+                day_heading = doc.add_heading(day, level=2)
+                day_heading.style.font.color.rgb = None  # reset color to default
+                for paragraph in day_heading.paragraphs:
+                    paragraph.space_before = 0
+                    paragraph.space_after = 0
+                
+                # make table for shifts
+                table = doc.add_table(rows=1, cols=2)
+                table.style = 'Table Grid'
+                table.allow_autofit = True
+                
+                # set headers
+                header_cells = table.rows[0].cells
+                header_cells[0].text = "Shift Time"
+                header_cells[1].text = "Worker"
+                
+                # add shifts to table
+                for shift, worker in shifts.items():
+                    row_cells = table.add_row().cells
+                    row_cells[0].text = shift
+                    row_cells[1].text = worker if worker else 'Unassigned'
+                    
+                    # calculate hours
+                    if worker:
+                        duration = calculate_shift_duration(shift)
+                        worker_hours[worker] = worker_hours.get(worker, 0) + duration
+                
+                # add spacing after table
+                doc.add_paragraph()
+
+            # add hours summary
+            doc.add_heading("Weekly Hours Summary", level=2)
+            summary_table = doc.add_table(rows=1, cols=2)
+            summary_table.style = 'Table Grid'
             
-            # add spacing after table
+            # set summary headers
+            header_cells = summary_table.rows[0].cells
+            header_cells[0].text = "Worker Name"
+            header_cells[1].text = "Total Hours"
+            
+            # add worker hours (sorted by hours)
+            sorted_workers = sorted(worker_hours.items(), key=lambda x: x[1], reverse=True)
+            for worker, hours in sorted_workers:
+                row_cells = summary_table.add_row().cells
+                row_cells[0].text = worker
+                row_cells[1].text = f"{hours} hours"
+            
+            # add generation timestamp
             doc.add_paragraph()
+            footer = doc.add_paragraph(f"Generated on: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            footer.alignment = 1
 
-        # add hours summary
-        doc.add_heading("Weekly Hours Summary", level=2)
-        summary_table = doc.add_table(rows=1, cols=2)
-        summary_table.style = 'Table Grid'
-        
-        # set summary headers
-        header_cells = summary_table.rows[0].cells
-        header_cells[0].text = "Worker Name"
-        header_cells[1].text = "Total Hours"
-        
-        # add worker hours (sorted by hours)
-        sorted_workers = sorted(worker_hours.items(), key=lambda x: x[1], reverse=True)
-        for worker, hours in sorted_workers:
-            row_cells = summary_table.add_row().cells
-            row_cells[0].text = worker
-            row_cells[1].text = f"{hours} hours"
-        
-        # add generation timestamp
-        doc.add_paragraph()
-        footer = doc.add_paragraph(f"Generated on: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-        footer.alignment = 1
-
-        # save file
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".docx",
-            filetypes=[("Word files", "*.docx")],
-            initialfile="Weekly_Schedule.docx"
-        )
-        if file_path:
-            doc.save(file_path)
-            messagebox.showinfo("Success", "Schedule saved successfully!")
-            
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to save Word file: {e}")
+            # save the file
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".docx",
+                filetypes=[("Word files", "*.docx")],
+                initialfile="Weekly_Schedule.docx"
+            )
+            if file_path:
+                doc.save(file_path)
+                messagebox.showinfo("Success", "Schedule saved successfully!")
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save Word file: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
