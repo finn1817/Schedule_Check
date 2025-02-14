@@ -42,7 +42,7 @@ class MainApp:
         style.configure(
             'Modern.TButton',
             padding=10,
-            font=('Helvetica', 10),
+            font=('Helvetica', 9),
             background='#2196F3',  # material design blue
             relief='flat'
         )
