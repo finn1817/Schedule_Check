@@ -17,11 +17,11 @@ class WeeklyScheduleGenerator:
         style = ttk.Style()
         style.configure('TButton', padding=10)
         
-        # making main frame
+        # making the main frame
         main_frame = ttk.Frame(root, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # tatle label
+        # title label
         title_label = ttk.Label(main_frame, text="Weekly Schedule Generator", 
                               font=('Helvetica', 16, 'bold'))
         title_label.pack(pady=(0, 20))
@@ -58,7 +58,7 @@ class WeeklyScheduleGenerator:
             return
 
         try:
-            # loading data into a pandas dataframe
+            # load data into a pandas DataFrame
             self.schedule_df = pd.read_excel(file_path)
 
             # making sure all columns are there
@@ -109,11 +109,11 @@ class WeeklyScheduleGenerator:
             messagebox.showerror("Error", "Please generate availability first.")
             return
 
-        # starting schedule dictionary
+        # initialize schedule dictionary
         schedule = {day: {shift: None for shift in shifts} 
                    for day, shifts in self.availability_data.items()}
 
-        # using the current time as random seed
+        # use current time as random seed
         random.seed(time.time())
 
         # assign workers to shifts
@@ -136,7 +136,7 @@ class WeeklyScheduleGenerator:
                         break
 
                 # if everyone has worked, pick the first available person
-                if not assigned and workers:
+                if not assigned:
                     schedule[day][shift] = workers[0]
 
         self.schedule_data = schedule
@@ -145,14 +145,14 @@ class WeeklyScheduleGenerator:
 
     def create_calendar_image(self, data, title="Weekly Schedule"):
         """Generates a PNG visual representation of the schedule."""
-        # picture settings
+        # pic settings
         width, height = 1200, 1000
         header_height = 100
         color_bg = (255, 255, 255)
         color_header = (70, 130, 180)
         color_text = (0, 0, 0)
 
-        # making the image
+        # make the image
         img = Image.new("RGB", (width, height), color_bg)
         draw = ImageDraw.Draw(img)
 
@@ -164,7 +164,7 @@ class WeeklyScheduleGenerator:
             font_title = ImageFont.load_default()
             font_body = ImageFont.load_default()
 
-        # add in title
+        # add title
         draw.text((width // 2 - 200, 10), title, fill=color_header, font=font_title)
 
         # draw schedule data
@@ -197,7 +197,7 @@ class WeeklyScheduleGenerator:
             # add title with formatting
             title = doc.add_heading("Weekly Schedule", level=1)
             title.alignment = 1  # center alignment
-            doc.add_paragraph()  # add extra spacing after title
+            doc.add_paragraph()
             
             # track worker hours
             worker_hours = {}
@@ -222,22 +222,14 @@ class WeeklyScheduleGenerator:
                     
                 return end_hour - start_hour
 
-            # style for day headers
+            # add each day's schedule
             for day, shifts in self.schedule_data.items():
-                # add extra spacing before each day
-                doc.add_paragraph()
-                
-                # add day header with proper spacing
+                # add day header
                 day_heading = doc.add_heading(day, level=2)
-                day_heading.style.font.color.rgb = None  # reset color to default
-                for paragraph in day_heading.paragraphs:
-                    paragraph.space_before = 0
-                    paragraph.space_after = 0
                 
                 # make table for shifts
                 table = doc.add_table(rows=1, cols=2)
                 table.style = 'Table Grid'
-                table.allow_autofit = True
                 
                 # set headers
                 header_cells = table.rows[0].cells
@@ -255,15 +247,14 @@ class WeeklyScheduleGenerator:
                         duration = calculate_shift_duration(shift)
                         worker_hours[worker] = worker_hours.get(worker, 0) + duration
                 
-                # add spacing after table
-                doc.add_paragraph()
+                doc.add_paragraph()  # add spacing
 
             # add hours summary
             doc.add_heading("Weekly Hours Summary", level=2)
             summary_table = doc.add_table(rows=1, cols=2)
             summary_table.style = 'Table Grid'
             
-            # set summary headers
+            # set up summary headers
             header_cells = summary_table.rows[0].cells
             header_cells[0].text = "Worker Name"
             header_cells[1].text = "Total Hours"
