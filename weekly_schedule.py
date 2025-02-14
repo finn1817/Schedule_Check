@@ -185,104 +185,113 @@ class WeeklyScheduleGenerator:
 
         img.save(self.image_path)
 
-    def save_word_file(self):
-        """Saves the generated schedule and worker summary to a Word document."""
-        if not self.schedule_data:
-            messagebox.showerror("Error", "Please generate the final schedule first.")
-            return
+def save_word_file(self):
+    """Saves the generated schedule and worker summary to a Word document."""
+    if not self.schedule_data:
+        messagebox.showerror("Error", "Please generate the final schedule first.")
+        return
 
-        try:
-            doc = Document()
+    try:
+        doc = Document()
+        
+        # add title with formatting
+        title = doc.add_heading("Weekly Schedule", level=1)
+        title.alignment = 1  # center alignment
+        doc.add_paragraph()  # add extra spacing after title
+        
+        # track worker hours
+        worker_hours = {}
+        
+        def calculate_shift_duration(shift_time):
+            """Calculate duration of a shift in hours."""
+            start, end = shift_time.split(" - ")
             
-            # add title with formatting
-            title = doc.add_heading("Weekly Schedule", level=1)
-            title.alignment = 1  # center alignment
+            def convert_to_24hr(time_str):
+                time = int(time_str.split()[0])
+                if "PM" in time_str and time != 12:
+                    time += 12
+                elif "AM" in time_str and time == 12:
+                    time = 0
+                return time
+            
+            start_hour = convert_to_24hr(start)
+            end_hour = convert_to_24hr(end)
+            
+            if end_hour < start_hour:
+                end_hour += 24
+                
+            return end_hour - start_hour
+
+        # style for day headers
+        for day, shifts in self.schedule_data.items():
+            # add extra spacing before each day
             doc.add_paragraph()
             
-            # track worker hours
-            worker_hours = {}
+            # add day header with blue color and proper spacing
+            day_heading = doc.add_heading(day, level=2)
+            day_heading.style.font.color.rgb = None  # reset color to default
+            for paragraph in day_heading.paragraphs:
+                paragraph.space_before = 0
+                paragraph.space_after = 0
             
-            def calculate_shift_duration(shift_time):
-                """Calculate duration of a shift in hours."""
-                start, end = shift_time.split(" - ")
-                
-                def convert_to_24hr(time_str):
-                    time = int(time_str.split()[0])
-                    if "PM" in time_str and time != 12:
-                        time += 12
-                    elif "AM" in time_str and time == 12:
-                        time = 0
-                    return time
-                
-                start_hour = convert_to_24hr(start)
-                end_hour = convert_to_24hr(end)
-                
-                if end_hour < start_hour:
-                    end_hour += 24
-                    
-                return end_hour - start_hour
-
-            # add each day's schedule
-            for day, shifts in self.schedule_data.items():
-                # add day header
-                day_heading = doc.add_heading(day, level=2)
-                
-                # create table for shifts
-                table = doc.add_table(rows=1, cols=2)
-                table.style = 'Table Grid'
-                
-                # set headers
-                header_cells = table.rows[0].cells
-                header_cells[0].text = "Shift Time"
-                header_cells[1].text = "Worker"
-                
-                # add shifts to table
-                for shift, worker in shifts.items():
-                    row_cells = table.add_row().cells
-                    row_cells[0].text = shift
-                    row_cells[1].text = worker if worker else 'Unassigned'
-                    
-                    # calculate hours
-                    if worker:
-                        duration = calculate_shift_duration(shift)
-                        worker_hours[worker] = worker_hours.get(worker, 0) + duration
-                
-                doc.add_paragraph()  # add spacing
-
-            # add hours summary
-            doc.add_heading("Weekly Hours Summary", level=2)
-            summary_table = doc.add_table(rows=1, cols=2)
-            summary_table.style = 'Table Grid'
+            # make table for shifts
+            table = doc.add_table(rows=1, cols=2)
+            table.style = 'Table Grid'
+            table.allow_autofit = True
             
-            # set summary headers
-            header_cells = summary_table.rows[0].cells
-            header_cells[0].text = "Worker Name"
-            header_cells[1].text = "Total Hours"
+            # set headers
+            header_cells = table.rows[0].cells
+            header_cells[0].text = "Shift Time"
+            header_cells[1].text = "Worker"
             
-            # add worker hours (sorted by hours)
-            sorted_workers = sorted(worker_hours.items(), key=lambda x: x[1], reverse=True)
-            for worker, hours in sorted_workers:
-                row_cells = summary_table.add_row().cells
-                row_cells[0].text = worker
-                row_cells[1].text = f"{hours} hours"
+            # add shifts to table
+            for shift, worker in shifts.items():
+                row_cells = table.add_row().cells
+                row_cells[0].text = shift
+                row_cells[1].text = worker if worker else 'Unassigned'
+                
+                # calculate hours
+                if worker:
+                    duration = calculate_shift_duration(shift)
+                    worker_hours[worker] = worker_hours.get(worker, 0) + duration
             
-            # add generation timestamp
+            # add spacing after table
             doc.add_paragraph()
-            footer = doc.add_paragraph(f"Generated on: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-            footer.alignment = 1
 
-            # save file
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".docx",
-                filetypes=[("Word files", "*.docx")],
-                initialfile="Weekly_Schedule.docx"
-            )
-            if file_path:
-                doc.save(file_path)
-                messagebox.showinfo("Success", "Schedule saved successfully!")
-                
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to save Word file: {e}")
+        # add hours summary
+        doc.add_heading("Weekly Hours Summary", level=2)
+        summary_table = doc.add_table(rows=1, cols=2)
+        summary_table.style = 'Table Grid'
+        
+        # set summary headers
+        header_cells = summary_table.rows[0].cells
+        header_cells[0].text = "Worker Name"
+        header_cells[1].text = "Total Hours"
+        
+        # add worker hours (sorted by hours)
+        sorted_workers = sorted(worker_hours.items(), key=lambda x: x[1], reverse=True)
+        for worker, hours in sorted_workers:
+            row_cells = summary_table.add_row().cells
+            row_cells[0].text = worker
+            row_cells[1].text = f"{hours} hours"
+        
+        # add generation timestamp
+        doc.add_paragraph()
+        footer = doc.add_paragraph(f"Generated on: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        footer.alignment = 1
+
+        # save file
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".docx",
+            filetypes=[("Word files", "*.docx")],
+            initialfile="Weekly_Schedule.docx"
+        )
+        if file_path:
+            doc.save(file_path)
+            messagebox.showinfo("Success", "Schedule saved successfully!")
+            
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to save Word file: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
