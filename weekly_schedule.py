@@ -165,44 +165,115 @@ class WeeklyScheduleGenerator:
 
 # --------------------------------------------------------------------------------------------------------------- #
 
-    def save_word_file(self):
-        """Saves the generated schedule and worker summary to a Word document."""
-        if not self.schedule_data:
-            messagebox.showerror("Error", "Please generate the final schedule first.")
-            return
+def save_word_file(self):
+    """Saves the generated schedule and worker summary to a Word document with improved formatting."""
+    if not self.schedule_data:
+        messagebox.showerror("Error", "Please generate the final schedule first.")
+        return
 
-        try:
-            # make a word document
-            doc = Document()
-            doc.add_heading("Weekly Schedule", level=1)
+    try:
+        # make a new Word document
+        doc = Document()
+        
+        # make a title
+        title = doc.add_heading("Weekly Schedule", level=1)
+        title.alignment = 1  # centered
+        doc.add_paragraph()  # add spacing
+        
+        # track worker hours with shift length
+        worker_hours = {}
+        
+        # helper func to calculate shift length
+        def calculate_shift_duration(shift_time):
+            start, end = shift_time.split(" - ")
+            
+            # change to 24 hour format for calculation
+            def convert_to_24hr(time_str):
+                time = int(time_str.split()[0])
+                if "PM" in time_str and time != 12:
+                    time += 12
+                elif "AM" in time_str and time == 12:
+                    time = 0
+                return time
+            
+            start_hour = convert_to_24hr(start)
+            end_hour = convert_to_24hr(end)
+            
+            # handle shifts that cross midnight
+            if end_hour < start_hour:
+                end_hour += 24
+                
+            return end_hour - start_hour
 
-            # track worker hours
-            worker_hours = {}
+        # write schedule data to the Word document with improved formatting
+        for day, shifts in self.schedule_data.items():
+            # add day header with styling
+            day_heading = doc.add_heading(day, level=2)
+            day_heading.style.font.color.rgb = None  # reset the color to default
+            
+            # make a table for each day's shifts
+            table = doc.add_table(rows=1, cols=2)
+            table.style = 'Table Grid'
+            table.allow_autofit = True
+            
+            # set header row
+            header_cells = table.rows[0].cells
+            header_cells[0].text = "Shift Time"
+            header_cells[1].text = "Worker"
+            
+            # add shifts to table
+            for shift, worker in shifts.items():
+                row_cells = table.add_row().cells
+                row_cells[0].text = shift
+                row_cells[1].text = worker if worker else 'Unassigned'
+                
+                # calculate and track hours for each worker
+                if worker:
+                    duration = calculate_shift_duration(shift)
+                    worker_hours[worker] = worker_hours.get(worker, 0) + duration
+            
+            doc.add_paragraph()  # add spacing between days
 
-            # write schedule data to the Word document
-            for day, shifts in self.schedule_data.items():
-                doc.add_heading(day, level=2)
-                for shift, worker in shifts.items():
-                    doc.add_paragraph(f"{shift}: {worker if worker else 'No one assigned'}")
+        # add worker summary section
+        doc.add_paragraph()  # add spacing
+        summary_heading = doc.add_heading("Weekly Hours Summary", level=2)
+        summary_heading.style.font.color.rgb = None  # reset color to default
+        
+        # make table for hours summary
+        summary_table = doc.add_table(rows=1, cols=2)
+        summary_table.style = 'Table Grid'
+        
+        # make a summary table header
+        header_cells = summary_table.rows[0].cells
+        header_cells[0].text = "Worker Name"
+        header_cells[1].text = "Total Hours"
+        
+        # sort workers by hours (descending)
+        sorted_workers = sorted(worker_hours.items(), key=lambda x: x[1], reverse=True)
+        
+        # add worker hours to summary table
+        for worker, hours in sorted_workers:
+            row_cells = summary_table.add_row().cells
+            row_cells[0].text = worker
+            row_cells[1].text = f"{hours} hours"
+        
+        # add footer with generation date
+        doc.add_paragraph()
+        footer = doc.add_paragraph(f"Generated on: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        footer.alignment = 1  # center alignment
 
-                    # track hours for each worker
-                    if worker:
-                        if worker not in worker_hours:
-                            worker_hours[worker] = 0
-                        worker_hours[worker] += 4  # assume each shift is 4 hours
-
-            # add worker summary at the bottom of the document
-            doc.add_heading("Summary of Hours", level=2)
-            for worker, hours in worker_hours.items():
-                doc.add_paragraph(f"{worker}: {hours} hours")
-
-            # save word file
-            file_path = filedialog.asksaveasfilename(defaultextension=".docx", filetypes=[("Word files", "*.docx")])
-            if file_path:
-                doc.save(file_path)
-                messagebox.showinfo("Success", f"Word file saved successfully at {file_path}.")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to save Word file: {e}")
+        # save word file
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".docx",
+            filetypes=[("Word files", "*.docx")],
+            initialfile="Weekly_Schedule.docx"
+        )
+        if file_path:
+            doc.save(file_path)
+            messagebox.showinfo("Success", f"Word file saved successfully at {file_path}.")
+            
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to save Word file: {e}")
 
 # --------------------------------------------------------------------------------------------------------------- #
 
