@@ -55,7 +55,6 @@ class MainApp:
         self.save_data()
         self.root.destroy()
 
-
 if __name__ == "__main__":
     root = tk.Tk()
     app = MainApp(root)
