@@ -1,8 +1,6 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog, ttk
+from tkinter import messagebox, simpledialog
 import json
-
-# ------------------------------------------------------------------------------------------------------------------------
 
 class WorkplaceManager:
     def __init__(self, root, data, save_callback):
@@ -12,12 +10,12 @@ class WorkplaceManager:
         self.data = data
         self.save_callback = save_callback
 
-        # workplace list
+        # listbox for displaying workplaces
         self.workplace_listbox = tk.Listbox(self.root)
         self.workplace_listbox.pack(side=tk.LEFT, fill=tk.Y, padx=5, pady=5)
         self.workplace_listbox.bind("<<ListboxSelect>>", self.load_workplace_details)
 
-        # control buttons
+        # control Buttons
         control_frame = tk.Frame(self.root)
         control_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=5, pady=5)
 
@@ -30,17 +28,20 @@ class WorkplaceManager:
         self.refresh_workplace_list()
 
     def refresh_workplace_list(self):
+        """Refresh the workplace listbox with current data."""
         self.workplace_listbox.delete(0, tk.END)
         for workplace in self.data["workplaces"]:
             self.workplace_listbox.insert(tk.END, workplace["name"])
 
     def add_workplace(self):
+        """Add a new workplace to the list."""
         new_name = simpledialog.askstring("Add Workplace", "Enter workplace name:")
         if new_name:
             self.data["workplaces"].append({"name": new_name, "hours": {}})
             self.refresh_workplace_list()
 
     def delete_workplace(self):
+        """Delete the selected workplace."""
         selected_index = self.workplace_listbox.curselection()
         if selected_index:
             del self.data["workplaces"][selected_index[0]]
@@ -48,33 +49,35 @@ class WorkplaceManager:
             self.save_data()
 
     def modify_workplace_hours(self):
+        """Modify the working hours for the selected workplace."""
         selected_index = self.workplace_listbox.curselection()
         if not selected_index:
-            messagebox.showerror("Error", "Please select a workplace to modify.")
+            messagebox.showerror("Error", "Please select a workplace to edit.")
             return
 
         workplace = self.data["workplaces"][selected_index[0]]
 
-        # modify hours for each day
+        # modify working hours for each day
         for day in ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]:
             default_hours = workplace["hours"].get(day, "9 AM - 5 PM")
             new_hours = simpledialog.askstring(f"Modify Hours: {day}", f"Enter working hours for {day}:", initialvalue=default_hours)
             if new_hours:
                 workplace["hours"][day] = new_hours
 
-        messagebox.showinfo("Success", f"Updated hours for {workplace['name']}")
+        messagebox.showinfo("Success", f"Updated hours for workplace '{workplace['name']}'.")
 
     def save_data(self):
+        """Save the changes using the provided callback."""
         self.save_callback()
         self.refresh_workplace_list()
         messagebox.showinfo("Save", "Workplaces saved successfully!")
 
     def load_workplace_details(self, event):
+        """Show details about the selected workplace."""
         selected_index = self.workplace_listbox.curselection()
         if selected_index:
             workplace = self.data["workplaces"][selected_index[0]]
             messagebox.showinfo("Workplace Details", json.dumps(workplace, indent=4))
-
-
-if __name__ == "__main__":
-    print("Run the MainApp.py module to launch the full application.")
+            
+# end
+# -----------------------------------------------------------------------------------------------------------
