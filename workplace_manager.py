@@ -5,7 +5,6 @@ import json
 from weekly_schedule import WeeklyScheduleGenerator
 from schedule_viewer import ScheduleViewer
 
-
 class WorkplaceManager:
     def __init__(self, root, data, save_callback):
         self.root = tk.Toplevel(root)
@@ -39,7 +38,7 @@ class WorkplaceManager:
         # schedule Options
         schedule_label = tk.Label(action_frame, text="Schedule Tools", font=("Arial", 14, "bold"))
         schedule_label.pack(pady=(20, 10))
-        
+
         tk.Button(action_frame, text="View Schedule", command=self.view_schedule).pack(fill=tk.X, pady=5)
         tk.Button(action_frame, text="Generate Weekly Schedule", command=self.generate_weekly_schedule).pack(fill=tk.X, pady=5)
 
@@ -105,3 +104,6 @@ class WorkplaceManager:
         self.save_callback()
         self.refresh_workplace_list()
         messagebox.showinfo("Save", "Workplaces and schedules saved successfully!")
+        
+    # end
+    # --------------------------------------------------------------------------------------------------
