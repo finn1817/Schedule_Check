@@ -6,15 +6,14 @@ from PIL import Image, ImageDraw, ImageFont
 import random
 import time
 
-
 class WeeklyScheduleGenerator:
     def __init__(self, root):
         """Initialize main GUI components."""
         self.root = root
         self.root.title("Weekly Schedule Generator")
         self.root.geometry("500x400")
-        
-        # initializing UI elements
+
+        # start up UI components
         main_frame = ttk.Frame(root, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -57,7 +56,7 @@ class WeeklyScheduleGenerator:
             messagebox.showerror("Error", "Please load a schedule file first.")
             return
 
-        # start an empty schedule
+        # start the empty schedule
         hour_schedule = {day: {hour: None for hour in range(8, 24)} for day in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']}
 
         # assign workers to slots
@@ -125,7 +124,6 @@ class WeeklyScheduleGenerator:
                 messagebox.showinfo("Success", "Schedule saved successfully!")
         except Exception as e:
             messagebox.showerror("Error", f"Error saving Word file: {e}")
-
 
 if __name__ == "__main__":
     root = tk.Tk()
