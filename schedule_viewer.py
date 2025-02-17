@@ -51,7 +51,7 @@ class ScheduleViewer:
                 messagebox.showerror("Error", "Please select a day.")
                 return
 
-            # checking for the needed columns for the upated logic
+            # checking for the needed columns for the updated logic
             required_columns = {'First Name', 'Last Name', 'Email', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'}
             if not required_columns.issubset(self.df.columns):
                 messagebox.showerror("Error", f"Excel file must contain the following columns: {', '.join(required_columns)}")
@@ -61,7 +61,7 @@ class ScheduleViewer:
             self.available_text.delete("1.0", tk.END)
 
             selected_day = selected_day.strip()
-            
+
             # filter based on the day's availability
             available_workers = self.df[
                 (self.df[selected_day].notna()) & (self.df[selected_day].str.lower() != 'na')
